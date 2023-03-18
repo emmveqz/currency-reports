@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, maximum-scale=1, user-scalable=no">
+	<link rel="shortcut icon" href="/favicon.ico" />
+	<link rel="stylesheet" href="/css/Roboto_300-400-500-700_display-swap.min.css" />
+	<title>Currency Reports</title>
+	<style>
+	* {
+		touch-action: manipulation;
+	}
+
+	html,
+	body,
+	#root {
+		margin: 0;
+		height: 100%;
+	}
+
+	a {
+		color: #1d92ee;
+		text-decoration: none;
+	}
+
+	@keyframes init-spinner-keyframes {
+		0% {
+			transform-origin: 50% 50%;
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	@-webkit-keyframes init-spinner-keyframes {
+		0% {
+			transform-origin: 50% 50%;
+		}
+		100% {
+			transform: rotate(360deg);
+		}
+	}
+	.my-init-loader {
+		position: relative;
+		display: flex;
+		justify-content: flex-end;
+		padding-top: 26px;
+		padding-right: 26px;
+	}
+	.my-init-loader > div {
+		width: 30px;
+		height: 30px;
+		display: inline-block;
+	}
+	.my-init-loader svg {
+		display: block;
+	}
+	.init-spinner-bg {
+		transform: rotate(270deg);
+		color: #eeeeee;
+	}
+	.init-spinner-bg circle {
+		stroke-dasharray: 125.664;
+		stroke-dashoffset: 0px;
+		stroke: currentColor;
+	}
+	.init-spinner {
+		color: #1a90ff;
+		position: absolute;
+		animation: init-spinner-keyframes 520ms linear infinite;
+	}
+	.init-spinner circle {
+		stroke-linecap: round;
+		stroke-dasharray: 80px, 200px;
+		stroke: currentColor;
+		animation: none;
+	}
+	</style>
+</head>
+
+<body>
+	<div id="root">
+		<div class="my-init-loader">
+			<div role="progressbar" aria-valuenow="100" class="init-spinner-bg">
+				<svg viewBox="22 22 44 44">
+					<circle cx="44" cy="44" r="20" fill="none" stroke-width="4"></circle>
+				</svg>
+			</div>
+			<div role="progressbar" class="init-spinner">
+				<svg viewBox="22 22 44 44">
+					<circle cx="44" cy="44" r="20" fill="none" stroke-width="4"></circle>
+				</svg>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript" src="/js/main.js"></script>
+</body>
+</html>

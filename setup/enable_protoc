@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# bin & include folders
+PROTOC_FOLDER=$HOME/protoc-3
+BIN_FOLDER=$PROTOC_FOLDER/bin
+INC_FOLDER=$PROTOC_FOLDER/include
+
+# add folder to executable bin shortcut
+export PATH=$PATH:$BIN_FOLDER
+
+# setup C compiler configurations
+export C_INCLUDE_PATH=$INC_FOLDER
+export CPLUS_INCLUDE_PATH=$INC_FOLDER

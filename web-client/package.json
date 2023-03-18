@@ -1,0 +1,43 @@
+{
+	"name": "currency-reports-web-client",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"scripts": {
+		"build": "npm run gen-proto-web  &&  npx tsc --build ./src/tsconfig.json  &&  npx webpack --context ./src --config ./src/webpack.config.js",
+		"clean-js": "rm -f ./src/App.js && rm -f ./src/index.js && rm -f ./src/*/*.js && rm -f ./src/*/*/*.js",
+		"clean-proto-js": "rm -f ./proto-types/*.js",
+    "deploy-to-webserver": "cp -R ./dist/* ../web-server/public/",
+    "gen-proto-web": "mkdir -p ./proto-types  &&  protoc -I=../protos ../protos/*.proto --js_out=import_style=commonjs,binary:./proto-types --grpc-web_out=import_style=typescript,mode=grpcwebtext:./proto-types",
+    "gen-vars": "npx tsc --build ./src/gen-vars-tsconfig.json   &&   node ./src/config/gen-vars.js",
+    "postinstall": "npm run gen-vars"
+	},
+	"author": "Emmanuel Velazquez Lopez",
+	"license": "ISC",
+	"dependencies": {
+    "@emmveqz/currency-reports-core-enums": "^1.0.0",
+		"@material-ui/core": "^4.10.2",
+		"@material-ui/icons": "^4.9.1",
+		"@material-ui/lab": "^4.0.0-alpha.56",
+		"google-protobuf": "^3.10.0",
+		"grpc-web": "^1.0.0",
+		"react": "^16.13.1",
+		"react-async": "^10.0.1",
+		"react-dom": "^16.13.1",
+		"react-google-charts": "^3.0.15",
+		"react-router-dom": "^5.2.0",
+		"validate.js": "^0.13.1"
+	},
+	"devDependencies": {
+		"@types/google-protobuf": "^3.7.2",
+		"@types/node": "^12.7.3",
+		"@types/react-dom": "^17.0.0",
+		"@types/react-router-dom": "^5.1.5",
+		"html-webpack-plugin": "^3.2.0",
+		"tslint": "^6.1.2",
+		"tslint-react": "^5.0.0",
+		"typescript": "^3.6.4",
+		"webpack": "^4.41.0",
+		"webpack-cli": "^3.3.9"
+	}
+}

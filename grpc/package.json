@@ -1,0 +1,47 @@
+{
+  "name": "currency-reports-grpc",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc --build ./tsconfig.json",
+    "clean-js": "rm -f ./*.js && rm -f ./services/*.js",
+		"clean-proto-js": "rm -f ./proto-types/*.js",
+		"gen-protos-js": "mkdir -p ./proto-types && npx grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./proto-types --grpc_out=./proto-types --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../protos ../protos/*.proto",
+		"gen-protos-ts": "mkdir -p ./proto-types && npx grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./proto-types -I ../protos ../protos/*.proto",
+    "gen-vars": "npx tsc --build ./gen-vars-tsconfig.json   &&   node ./config/gen-vars.js",
+    "postinstall": "npm run gen-vars",
+    "prestart": "npm run clean-js   &&   npm run gen-vars   &&   npm run build",
+    "start": "node index.js"
+  },
+  "author": "Emmanuel Velazquez Lopez",
+  "license": "ISC",
+  "dependencies": {
+    "@emmveqz/currency-reports-core": "^1.0.0",
+    "@emmveqz/currency-reports-core-enums": "^1.0.0",
+    "@emmveqz/currency-reports-core-interfaces": "^1.0.0",
+    "@emmveqz/currency-reports-core-vars": "^1.0.0",
+    "@emmveqz/currency-reports-tools": "^1.0.0",
+    "@grpc/grpc-js": "^0.6.7",
+    "@grpc/proto-loader": "^0.5.2",
+    "@types/async": "^3.0.2",
+    "@types/google-protobuf": "^3.7.2",
+    "@types/imap": "^0.8.30",
+    "@types/lodash": "^4.14.144",
+    "@types/node": "^12.7.3",
+    "@types/nodemailer": "^6.4.0",
+    "async": "^3.1.0",
+    "google-protobuf": "^3.10.0",
+    "grpc": "^1.24.0",
+    "grpc-tools": "^1.8.0",
+    "grpc_tools_node_protoc_ts": "^5.2.2",
+    "imap": "^0.8.19",
+    "lodash": "^4.17.15",
+    "nodemailer": "^6.4.5",
+    "protobufjs": "^6.8.8"
+  },
+  "devDependencies": {
+    "tslint": "^5.19.0",
+    "typescript": "^3.6.4"
+  }
+}

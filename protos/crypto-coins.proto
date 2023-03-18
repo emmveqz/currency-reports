@@ -1,0 +1,61 @@
+
+syntax = "proto3";
+package currencyPkg;
+
+import "common.proto";
+
+// ###########################################
+
+message CurrencyRateTick {
+	string CreationDate = 1;
+	float Rate = 2;
+}
+
+message RealTimeRateRequest {
+	string Currency = 1;
+}
+
+message HistoryDataRequest {
+	string Currency = 1;
+	commonPkg.HistoryRangeEnum HistoryRange = 2;
+}
+
+message SuscribeAlertRequest {
+	string Currency = 1;
+	// @ToDo Shoul be calculated server-side, hence not included in the request.
+	float CurrentRate = 2;
+	commonPkg.RateAlertBasisEnum Basis = 3;
+	// @ToDo Shoul be calculated server-side, hence not included in the request.
+	commonPkg.RateAlertTypeEnum Type = 4;
+	float Factor = 5;
+	// For when `Basis` = `commonPkg.RateAlertBasisEnum.Percentage`
+	int32 TimesToRepeat = 6;
+	string Email = 7;
+	string PhoneNumber = 8;
+	bool RemindUntilSeen = 9;
+	string Memo = 10;
+}
+
+message CurrencySupportedRequest {
+	string Currency = 1;
+}
+
+message MarkAlertAsSeenRequest {
+	int32 AlertId = 1;
+	string Email = 2;
+	string PhoneNumber = 3;
+} //
+
+message HistoryDataResponse {
+	commonPkg.ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	repeated CurrencyRateTick Result = 3;
+}
+
+service CurrencyService {
+	rpc RealTimeRate(RealTimeRateRequest) returns (stream commonPkg.FloatResponse);
+	rpc HistoryData(HistoryDataRequest) returns (HistoryDataResponse);
+	rpc SuscribeAlert(SuscribeAlertRequest) returns (commonPkg.StatusResponse);
+	rpc MarkAlertAsSeen(MarkAlertAsSeenRequest) returns (commonPkg.StatusResponse);
+	rpc CurrencySupported(CurrencySupportedRequest) returns (commonPkg.BooleanResponse);
+}

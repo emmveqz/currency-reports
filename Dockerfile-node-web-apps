@@ -1,0 +1,27 @@
+
+FROM node:12.22.12-stretch
+
+# PASSED ARGUMENTS
+
+ARG PROTOC_VER
+ARG GRPCWEB_VER
+
+# INITIAL ADD-ONS
+
+RUN apt-get install -y git
+RUN npm install -g typescript@3.9.9
+RUN npm install -g webpack@4.46.0
+RUN npm install -g webpack-cli@3.3.12
+RUN npm install -g html-webpack-plugin@3.2.0
+
+# WORKING DIRECTORY
+
+WORKDIR /home/currency-reports
+
+# COPY SOURCE FILES
+
+COPY ./setup/protoc_installation    ./setup/protoc_installation
+
+# SETTING UP INITIAL CONFIG
+
+RUN sh ./setup/protoc_installation  ${PROTOC_VER}  ${GRPCWEB_VER}

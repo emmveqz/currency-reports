@@ -1,0 +1,100 @@
+
+syntax = "proto3";
+package commonPkg;
+
+import "google/protobuf/struct.proto";
+
+// ###########################################
+
+enum SqlCond {
+	AND = 0;
+	OR = 1;
+}
+
+enum SqlOptr {
+	Equal = 0;
+	Different = 1;
+	Greater = 2;
+	Less = 3;
+	Contain = 4;
+	BeginWith = 5;
+	EndWith = 6;
+	In = 7;
+}
+
+enum ServiceResponseStatus {
+	Error = 0;
+	Success = 1;
+	// Meant for List() and Query()
+	NotModified = 2;
+	Info = 3;
+	Warning = 4;
+	// Either invalid, or just no session at all.
+	InvalidSession = 5;
+}
+
+enum HistoryRangeEnum {
+	None2 = 0;
+	Hourly = 1;
+	FourHourly = 2;
+	Daily = 3;
+	Weekly = 4;
+	Monthly = 5;
+	Yearly = 6;
+	All = 7;
+}
+
+enum RateAlertBasisEnum {
+	None3 = 0;
+	Amount = 1;
+	Percentage = 2;
+}
+
+enum RateAlertTypeEnum {
+	None4 = 0;
+	Above = 1;
+	Below = 2;
+}
+
+// ###########################################
+
+message StatusResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+}
+
+message BooleanResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	bool Result = 3;
+}
+
+message IntegerResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	uint32 Result = 3;
+}
+
+message FloatResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	float Result = 3;
+}
+
+message StringResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	string Result = 3;
+}
+
+message ListResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	repeated google.protobuf.Struct Result = 3;
+}
+
+message ObjectResponse {
+	ServiceResponseStatus Status = 1;
+	string StatusMsg = 2;
+	google.protobuf.Struct Result = 3;
+}

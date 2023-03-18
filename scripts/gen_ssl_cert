@@ -1,0 +1,15 @@
+#!/bin/sh
+
+THIS_DIR=$(dirname $0)
+
+# load configuration vars
+. $THIS_DIR/../.env
+
+SELECTED_SERVER=$1
+
+
+SSL_DOMAIN=$(echo $MYVAR_WEB_SERVERDOMAIN)
+
+
+# change the contact email address and domain accordingly
+certbot certonly --agree-tos --no-eff-email --expand --manual --manual-public-ip-logging-ok --preferred-challenges dns --server https://acme-v02.api.letsencrypt.org/directory --email $MYVAR_SSL_NEWS_EMAIL -d $SSL_DOMAIN

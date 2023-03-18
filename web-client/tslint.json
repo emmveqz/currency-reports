@@ -1,0 +1,46 @@
+{
+  "defaultSeverity": "error",
+  "extends": [
+    "tslint:recommended",
+    "tslint-react"
+  ],
+  "jsRules": {
+  },
+  "linterOptions": {
+    "exclude": [
+      "node_modules"
+    ]
+  },
+  "rules": {
+    "array-type": false,
+    "callable-types": false,
+    "forin": false,
+    "indent": [true, "spaces"],
+    "interface-over-type-literal": false,
+    "jsx-boolean-value": false,
+    "jsx-no-lambda": false,
+    "jsx-self-close": false,
+    "max-line-length": {
+      "options": {
+        "limit": 186,
+        "check-strings": true
+      }
+    },
+    "object-literal-sort-keys": false,
+    "one-line": false,
+    "no-bitwise": false,
+    "no-console": false,
+    "no-conditional-assignment": false,
+    "no-empty": {
+      "options": "allow-empty-functions"
+    },
+    "no-namespace": false,
+    "no-unused-expression": false,
+    "semicolon": {
+      "options": "never",
+      "severity": "warning"
+    }
+  },
+  "rulesDirectory": [
+  ]
+}

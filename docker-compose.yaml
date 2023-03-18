@@ -1,0 +1,88 @@
+version: "3"
+
+services:
+  my_envoy_proxy:
+    container_name: my-envoy-proxy
+    build:
+      context: .
+    command:
+      - /bin/sh
+      - -c
+      - |
+        sh ./scripts/setup_envoy_files
+        cp ./envoy-proxy/envoy.yaml      /etc/envoy/envoy.yaml
+        cp ./ssl/online/key.pem          /tmp/key.pem
+        cp ./ssl/online/ca-and-crt.pem   /tmp/ca-and-crt.pem
+        /usr/local/bin/envoy -c          /etc/envoy/envoy.yaml
+    image: envoyproxy/envoy:v1.14.1
+    ports:
+      - "${MYVAR_ENVOY_SERVICEPORT_SECURE}:${MYVAR_ENVOY_SERVICEPORT_SECURE}"
+      - "${MYVAR_ENVOY_SERVICEPORT_INSECURE}:${MYVAR_ENVOY_SERVICEPORT_INSECURE}"
+    network_mode: host
+    volumes:
+      - ./.env:/home/currency-reports/config/vars
+      - ./envoy-proxy/envoy.tpl.yaml:/home/currency-reports/envoy-proxy/envoy.tpl.yaml
+      - ./scripts:/home/currency-reports/scripts
+      - ./ssl:/home/currency-reports/ssl
+    working_dir: /home/currency-reports
+
+  nginx_port80_proxy:
+    container_name: nginx-port80-proxy
+    hostname: nginx-port80-proxy
+    image: nginx:1.18.0
+    network_mode: host
+    ports:
+      - 80:80
+    volumes:
+      - ./nginx/port80-proxy/conf.d:/etc/nginx/conf.d
+
+  node_web_apps:
+    container_name: node-web-apps
+    build:
+      args:
+        PROTOC_VER: ${PROTOC_VER}
+        GRPCWEB_VER: ${GRPCWEB_VER}
+      context: .
+      dockerfile: Dockerfile-node-web-apps
+    command:
+      - /bin/sh
+      - -c
+      - |
+        .        ./setup/enable_protoc
+        rm -fR   ./grpc
+        rm -fR   ./web-client
+        rm -fR   ./web-server
+        cp -R    ./grpc-copy         ./grpc
+        cp -R    ./web-client-copy   ./web-client
+        cp -R    ./web-server-copy   ./web-server
+        cd        /home/currency-reports/web-client
+        echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
+        npm ci    --only=production
+        npm run   build
+        npm run   deploy-to-webserver
+        cd        /home/currency-reports/web-server
+        echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
+        npm ci    --only=production
+        npm run   start > /dev/null &
+        cd        /home/currency-reports/grpc
+        echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
+        npm ci    --only=production
+        npm run   start > /dev/null
+#        tail -f   /dev/null
+    depends_on:
+      - my_envoy_proxy
+      - nginx_port80_proxy
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+    network_mode: host
+    volumes:
+      - ./grpc:/home/currency-reports/grpc-copy
+      - ./protos:/home/currency-reports/protos
+      - ./scripts:/home/currency-reports/scripts
+      - ./setup:/home/currency-reports/setup
+      - ./ssl:/home/currency-reports/ssl
+      - ./web-client:/home/currency-reports/web-client-copy
+      - ./web-server:/home/currency-reports/web-server-copy
+      - ./.env:/home/currency-reports/config/vars
+    working_dir: /home/currency-reports

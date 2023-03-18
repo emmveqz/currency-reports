@@ -1,0 +1,29 @@
+#!/bin/sh
+
+THIS_DIR=$(dirname $0)
+
+# load configuration vars
+. $THIS_DIR/../config/vars
+
+# some local vars
+ENVOY_DIR=$THIS_DIR/../envoy-proxy
+ENVOY_TPL=$ENVOY_DIR/envoy.tpl.yaml
+ENVOY_GEN=$ENVOY_DIR/envoy.yaml
+
+
+# start generating envoy.yaml file
+
+[ "$MYVAR_ENVOY_ACCESSLOG_ENABLED" = 1 ] && sed 's/#2/  /g' $ENVOY_TPL > $ENVOY_GEN || cp $ENVOY_TPL $ENVOY_GEN
+
+[ "$MYVAR_ENVOY_SECURESERVICE_ENABLED" = 1 ] && sed -i 's/#1/  /g' $ENVOY_GEN
+
+[ "$MYVAR_ENVOY_SECURESERVICE_ENABLED" = 1 ] && sed -i 's/#3/  /g' $ENVOY_GEN
+
+sed -i "s/_SERVICEPORT1/${MYVAR_ENVOY_SERVICEPORT_INSECURE}/g" $ENVOY_GEN
+
+[ "$MYVAR_ENVOY_SECURESERVICE_ENABLED" = 1 ] && sed -i "s/_SERVICEPORT2/${MYVAR_ENVOY_SERVICEPORT_SECURE}/g" $ENVOY_GEN || sed -i "s/_SERVICEPORT2/${MYVAR_ENVOY_SERVICEPORT_INSECURE}/g" $ENVOY_GEN
+
+sed -i "s/_SERVERPORT/${MYVAR_GRPC_SERVERPORT}/g" $ENVOY_GEN
+
+sed -i "s/_SERVICEDOMAIN/${MYVAR_WEB_SERVERDOMAIN}/g" $ENVOY_GEN
+

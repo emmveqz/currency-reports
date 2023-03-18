@@ -1,0 +1,15 @@
+#!/bin/sh
+
+THIS_DIR=$(dirname $0)
+
+# proto folders
+PROTOS_DEF=$THIS_DIR/../protos
+PROTOS_GEN=$THIS_DIR/../proto-types
+
+rm -f $PROTOS_GEN/*
+mkdir -p $PROTOS_GEN
+
+protoc \
+  -I=$PROTOS_DEF $PROTOS_DEF/*.proto \
+  --js_out=import_style=commonjs,binary:$PROTOS_GEN \
+  --grpc-web_out=import_style=typescript,mode=grpcwebtext:$PROTOS_GEN

@@ -1,0 +1,30 @@
+{
+  "name": "currency-reports-web-server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "npx tsc ./server.ts",
+    "clean-js": "rm -f ./*.js",
+    "gen-vars": "npx tsc --build ./gen-vars-tsconfig.json   &&   node ./config/gen-vars.js",
+    "postinstall": "npm run gen-vars",
+    "prestart": "npm run clean-js   &&   npm run gen-vars   &&   npm run build",
+    "start": "node server.js"
+  },
+  "author": "Emmanuel Velazquez Lopez",
+  "license": "ISC",
+  "dependencies": {
+    "@emmveqz/currency-reports-core-vars": "^1.0.0",
+    "@types/async": "^3.0.2",
+    "@types/lodash": "^4.14.144",
+    "@types/mime": "^2.0.1",
+    "@types/node": "^12.7.3",
+    "async": "^3.1.0",
+    "lodash": "^4.17.15",
+    "mime": "^2.4.4"
+  },
+  "devDependencies": {
+    "tslint": "^5.19.0",
+    "typescript": "^3.6.4"
+  }
+}

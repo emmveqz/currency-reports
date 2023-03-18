@@ -1,0 +1,87 @@
+#!/bin/bash
+
+
+# binaries versions
+# History:
+# 3.10.0
+# 3.14.0
+PROTOC_VER=$1
+# History:
+# 1.0.6
+# 1.2.1
+GRPCWEB_VER=$2
+
+if [ -z "$PROTOC_VER" ]; then
+	exit 1
+fi
+
+if [ -z "$GRPCWEB_VER" ]; then
+	exit 1
+fi
+
+# files names
+PROTOC_ZIP=protoc-$PROTOC_VER-linux-x86_64.zip
+PROTOC_BIN=protoc
+GRPCWEB_BIN=protoc-gen-grpc-web-$GRPCWEB_VER-linux-x86_64
+GRPCWEB_BIN_DEFAULT=protoc-gen-grpc-web
+
+# links
+# (hopefully we saved a local backup of these files just in case)
+PROTOC_LINK=https://github.com/protocolbuffers/protobuf/releases/download/v$PROTOC_VER/$PROTOC_ZIP
+GRPCWEB_LINK=https://github.com/grpc/grpc-web/releases/download/$GRPCWEB_VER/$GRPCWEB_BIN
+
+# bin & include folders
+PROTOC_FOLDER=$HOME/protoc-3
+BIN_FOLDER=$PROTOC_FOLDER/bin
+INC_FOLDER=$PROTOC_FOLDER/include
+
+# create folder for protoc
+mkdir -p $PROTOC_FOLDER
+
+# download protoc files
+wget -P $PROTOC_FOLDER $PROTOC_LINK
+wget -P $PROTOC_FOLDER $GRPCWEB_LINK
+
+# delete existing folders
+rm -r -f $BIN_FOLDER
+rm -r -f $INC_FOLDER
+
+
+# start installing protoc
+
+############       WARNING:      ############
+# unzipping this zip assumes it has a diretory structure like this:
+# |- ./
+# |- ./readme.txt
+# |- ./bin/protoc
+# |- ./include/...
+#       ^ hence the values for the BIN_FOLDER & INC_FOLDER variables
+sudo apt-get -y install unzip
+unzip -xq $PROTOC_FOLDER/$PROTOC_ZIP -d $PROTOC_FOLDER/
+mv $PROTOC_FOLDER/$GRPCWEB_BIN $BIN_FOLDER/$GRPCWEB_BIN_DEFAULT
+chmod ugo+x $BIN_FOLDER/$PROTOC_BIN
+chmod ugo+x $BIN_FOLDER/$GRPCWEB_BIN_DEFAULT
+
+# add folder to executable bin shortcut
+export PATH=$PATH:$BIN_FOLDER
+
+# setup C compiler configurations
+export C_INCLUDE_PATH=$INC_FOLDER
+export CPLUS_INCLUDE_PATH=$INC_FOLDER
+echo | gcc -E -Wp,-v -
+
+
+
+# we can start generating our protos
+
+# proto folders
+#PROTOS_DEF=./protos
+#PROTOS_GEN=./proto-types
+
+# generate proto classes
+#protoc -I=$PROTOS_DEF echo.proto \
+#  --js_out=import_style=commonjs:$PROTOS_GEN \
+#  --grpc-web_out=import_style=typescript,mode=grpcwebtext:$PROTOS_GEN
+
+
+

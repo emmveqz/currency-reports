@@ -1,0 +1,22 @@
+#!/bin/sh
+
+THIS_DIR=$(dirname $0)
+
+# load configuration vars
+. $THIS_DIR/../.env
+
+
+SSL_DOMAIN=$(echo $MYVAR_WEB_SERVERDOMAIN)
+
+#
+
+mkdir -p $THIS_DIR/../ssl/online
+rm -f $THIS_DIR/../ssl/ca-root.crt
+rm -f $THIS_DIR/../ssl/online/crt.pem
+rm -f $THIS_DIR/../ssl/online/key.pem
+rm -f $THIS_DIR/../ssl/online/ca-and-crt.pem
+
+ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/chain.pem      $THIS_DIR/../ssl/ca-root.crt
+ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/cert.pem       $THIS_DIR/../ssl/online/crt.pem
+ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/privkey.pem    $THIS_DIR/../ssl/online/key.pem
+ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/fullchain.pem  $THIS_DIR/../ssl/online/ca-and-crt.pem
