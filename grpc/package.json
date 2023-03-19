@@ -11,7 +11,7 @@
 		"gen-protos-ts": "mkdir -p ./proto-types && npx grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./proto-types -I ../protos ../protos/*.proto",
     "gen-vars": "npx tsc --build ./gen-vars-tsconfig.json   &&   node ./config/gen-vars.js",
     "postinstall": "npm run gen-vars",
-    "prestart": "npm run clean-js   &&   npm run gen-vars   &&   npm run build",
+    "prestart": "npm run clean-js   &&   npm run gen-vars   &&   npm run gen-protos-ts   &&   npm run gen-protos-js   &&   npm run build",
     "start": "node index.js"
   },
   "author": "Emmanuel Velazquez Lopez",
