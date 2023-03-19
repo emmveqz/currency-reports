@@ -48,6 +48,7 @@ services:
       - /bin/sh
       - -c
       - |
+        mkdir -p ./config
         cp       ./.env              ./config/vars
         .        ./setup/enable_protoc
         rm -fR   ./grpc
@@ -65,10 +66,11 @@ services:
         cd        /home/currency-reports/web-server
         echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
         npm ci    --only=production
-        npm run   start > /dev/null &
         cd        /home/currency-reports/grpc
         echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
         npm ci    --only=production
+        npm run   start > /dev/null &
+        cd        /home/currency-reports/web-server
         npm run   start > /dev/null
 #        tail -f   /dev/null
     depends_on:

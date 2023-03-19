@@ -23,7 +23,7 @@ import CurrencyRateTick           from "@emmveqz/currency-reports-core/dist/bos/
 import BaseDao                    from "@emmveqz/currency-reports-core/dist/dao/BaseDao"
 import MyDb                       from "@emmveqz/currency-reports-core/dist/dao/MyDb"
 import CryptoCoinsRateTicker      from "@emmveqz/currency-reports-tools/dist/CryptoCoinsRateTicker"
-import Binance                    from "@emmveqz/currency-reports-tools/dist/currency-endpoints/Binance"
+import BinanceUs                  from "@emmveqz/currency-reports-tools/dist/currency-endpoints/BinanceUs"
 import Utils                      from "@emmveqz/currency-reports-tools/dist/Utils"
 import Validator                  from "@emmveqz/currency-reports-tools/dist/Validator"
 import {
@@ -79,7 +79,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
 
   public realTimeRate(call: ServerWritableStream<RealTimeRateRequest>): void {
     const currency		= getCurrencyEnum( call.request.getCurrency() )
-    const rateTicker	= new CryptoCoinsRateTicker(Binance)
+    const rateTicker	= new CryptoCoinsRateTicker(BinanceUs)
     const ticker		= rateTicker.Tick(currency)
     let response: FloatResponse
 
