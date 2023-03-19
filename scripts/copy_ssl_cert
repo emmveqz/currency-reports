@@ -16,7 +16,7 @@ rm -f $THIS_DIR/../ssl/online/crt.pem
 rm -f $THIS_DIR/../ssl/online/key.pem
 rm -f $THIS_DIR/../ssl/online/ca-and-crt.pem
 
-ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/chain.pem      $THIS_DIR/../ssl/ca-root.crt
-ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/cert.pem       $THIS_DIR/../ssl/online/crt.pem
-ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/privkey.pem    $THIS_DIR/../ssl/online/key.pem
-ln -s -f /etc/letsencrypt/live/$SSL_DOMAIN/fullchain.pem  $THIS_DIR/../ssl/online/ca-and-crt.pem
+cp /etc/letsencrypt/live/$SSL_DOMAIN/chain.pem      $THIS_DIR/../ssl/ca-root.crt
+cp /etc/letsencrypt/live/$SSL_DOMAIN/cert.pem       $THIS_DIR/../ssl/online/crt.pem
+cp /etc/letsencrypt/live/$SSL_DOMAIN/privkey.pem    $THIS_DIR/../ssl/online/key.pem
+cp /etc/letsencrypt/live/$SSL_DOMAIN/fullchain.pem  $THIS_DIR/../ssl/online/ca-and-crt.pem

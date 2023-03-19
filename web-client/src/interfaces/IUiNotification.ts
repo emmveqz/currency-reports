@@ -1,7 +1,7 @@
 
 import {
   ServiceResponseStatus,
-}							from "../../../proto-types/common_pb"
+}							from "../../proto-types/common_pb"
 
 //
 

@@ -3,7 +3,7 @@ import LanguageEnum			from "@emmveqz/currency-reports-core-enums/dist/LanguageEn
 import {
   SqlCond,
   SqlOptr,
-}							from "../../../proto-types/common_pb"
+}							from "../../proto-types/common_pb"
 
 //
 

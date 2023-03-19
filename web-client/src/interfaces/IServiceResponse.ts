@@ -5,7 +5,7 @@ import {
 import * as gooPbStruct		from "google-protobuf/google/protobuf/struct_pb"
 import {
   ServiceResponseStatus,
-}							from "../../../proto-types/common_pb"
+}							from "../../proto-types/common_pb"
 
 //
 
