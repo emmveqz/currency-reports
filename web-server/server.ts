@@ -430,7 +430,6 @@ const http1Handler = (req: Http2ServerRequest, resp: Http2ServerResponse): void 
   }
 
   const isDomainAllowed = false
-    || true
     || req.headers[HTTP2_HEADER_HOST] === vars.MYVAR_WEB_SERVERDOMAIN
   const etag = req.headers[HTTP2_HEADER_IF_NONE_MATCH] as string
   const stream = new Http1Writer(resp)
@@ -482,7 +481,6 @@ const requestListener: RequestListener = (req, resp) => {
   }
 
   const isDomainAllowed = false
-    || true
     || req.headers[HTTP2_HEADER_HOST] === vars.MYVAR_WEB_SERVERDOMAIN
   const etag = req.headers[HTTP2_HEADER_IF_NONE_MATCH] as string
   const stream = new Http1Writer(resp)
@@ -578,10 +576,9 @@ createSecureServer(http2Config, http1Handler)
       })
   })
   .on("stream", (stream: ServerHttp2Stream, headers: IncomingHttpHeaders): void => {
-    const isDomainAllowed =
-      true ||
-      vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_HOST] ||
-      vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_AUTHORITY]
+    const isDomainAllowed = false
+      || vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_HOST]
+      || vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_AUTHORITY]
 
     const url = headers[HTTP2_HEADER_PATH] as string
     const etag = headers[HTTP2_HEADER_IF_NONE_MATCH] as string
