@@ -8,7 +8,7 @@ THIS_DIR=$(dirname $0)
 # some local vars
 ENVOY_DIR=$THIS_DIR/../envoy-proxy
 ENVOY_TPL=$ENVOY_DIR/envoy.tpl.yaml
-ENVOY_GEN=$ENVOY_DIR/envoy.yaml
+ENVOY_GEN=/tmp/envoy.yaml
 
 
 # start generating envoy.yaml file
@@ -27,3 +27,7 @@ sed -i "s/_SERVERPORT/${MYVAR_GRPC_SERVERPORT}/g" $ENVOY_GEN
 
 sed -i "s/_SERVICEDOMAIN/${MYVAR_WEB_SERVERDOMAIN}/g" $ENVOY_GEN
 
+
+SSL_DIR=$THIS_DIR/../ssl
+[ "$MYVAR_ENVOY_SECURESERVICE_ENABLED" = 1 ]   &&   cp $SSL_DIR/online/key.pem          /tmp/key.pem
+[ "$MYVAR_ENVOY_SECURESERVICE_ENABLED" = 1 ]   &&   cp $SSL_DIR/online/ca-and-crt.pem   /tmp/ca-and-crt.pem

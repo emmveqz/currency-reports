@@ -1,6 +1,7 @@
 **/dist/
 **/node_modules/
-**/proto-types/
+**/proto-types/*
 !/web-client/dist/
+!/proto-types/.empty
 **/*.js
 !webpack.config.js

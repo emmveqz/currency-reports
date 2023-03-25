@@ -31,7 +31,10 @@ import {
 
 const cookieDuration				= 10 // in days
 const { protocol, hostname }		= globalThis.location
-export const GRPC_ENDPOINT			= `${protocol}//${vars.MYVAR_GRPC_SERVICEDOMAIN}:${vars.MYVAR_ENVOY_SERVICEPORT_SECURE}`
+export const GRPC_ENDPOINT			= `${protocol}//${vars.MYVAR_GRPC_SERVICEDOMAIN}:${
+  vars.MYVAR_ENVOY_SECURESERVICE_ENABLED
+    ? vars.MYVAR_ENVOY_SERVICEPORT_SECURE
+    : vars.MYVAR_ENVOY_SERVICEPORT_INSECURE}`
 export const metaKeySessionId		= "x-currency-reports-session-id"
 
 export const setBrowserSessionId	= (doc: Document, meta?: Metadata): void => {

@@ -1,0 +1,20 @@
+{
+  "name": "currency-reports-gen-protos",
+  "version": "1.0.0",
+  "description": "Currency Reports (gen protos)",
+  "main": "index.js",
+  "scripts": {
+    "clean-protos": "rm -f ./proto-types/*   &&   rm -f ../proto-types/*.ts   &&   rm -f ../proto-types/*.js",
+    "copy-protos-to": "cp ./proto-types/* ../proto-types/",
+    "gen-protos-js": "mkdir -p ./proto-types && npx grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./proto-types --grpc_out=./proto-types --plugin=protoc-gen-grpc=./node_modules/.bin/grpc_tools_node_protoc_plugin -I ../protos ../protos/*.proto",
+    "gen-protos-ts": "mkdir -p ./proto-types && npx grpc_tools_node_protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=./proto-types -I ../protos ../protos/*.proto"
+  },
+  "author": "Emmanuel Velazquez Lopez",
+  "license": "ISC",
+  "dependencies": {
+    "@types/google-protobuf": "^3.15.2",
+    "google-protobuf": "^3.15.8",
+    "grpc-tools": "^1.11.1",
+    "grpc_tools_node_protoc_ts": "^5.2.2"
+  }
+}

@@ -93,5 +93,5 @@ static_resources:
 #    upstream_connection_options:
 #      tcp_keepalive:
 #        keepalive_time: 300
-    hosts: [{ socket_address: { address: localhost, port_value: _SERVERPORT }}]
+    hosts: [{ socket_address: { address: _SERVICEDOMAIN, port_value: _SERVERPORT }}]
 

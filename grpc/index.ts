@@ -19,10 +19,11 @@ grpcServer.addService(CurrencyServiceService, currencyService)
 
 //
 
-console.log("binding server...")
-grpcServer.bindAsync("0.0.0.0:" + BIND_PORT, serverCredentials, (err, port) => {
+console.log(`binding server on ${BIND_PORT} ...`)
+grpcServer.bindAsync(`${config.MYVAR_GRPC_SERVICEDOMAIN}:${BIND_PORT}`, serverCredentials, (err, port) => {
   if (!!err) {
     console.log("on bind error: ", JSON.stringify(err))
+    return
   }
   console.log("bound on port: ", port)
   grpcServer.start()
