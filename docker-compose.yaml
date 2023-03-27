@@ -26,16 +26,6 @@ services:
       - ./ssl:/home/currency-reports/ssl
     working_dir: /home/currency-reports
 
-  nginx_port80_proxy:
-    container_name: nginx-port80-proxy
-    hostname: nginx-port80-proxy
-    image: nginx:1.18.0
-    network_mode: host
-    ports:
-      - 80:80
-    volumes:
-      - ./nginx/port80-proxy/conf.d:/etc/nginx/conf.d
-
   node_gen_protos:
     container_name: node-gen-protos
     command:
