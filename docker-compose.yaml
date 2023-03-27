@@ -8,10 +8,7 @@ services:
       - -c
       - |
         sh ./scripts/setup_envoy_files
-        cp ./envoy-proxy/envoy.yaml      /etc/envoy/envoy.yaml
-        cp ./ssl/online/key.pem          /tmp/key.pem
-        cp ./ssl/online/ca-and-crt.pem   /tmp/ca-and-crt.pem
-        /usr/local/bin/envoy -c          /etc/envoy/envoy.yaml
+        /usr/local/bin/envoy -c          /tmp/envoy/envoy.yaml
     image: envoyproxy/envoy:v1.14.1
     healthcheck:
       test: pidof envoy || exit 1
