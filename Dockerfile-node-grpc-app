@@ -1,0 +1,12 @@
+
+FROM node:12.18.2-alpine3.12
+
+
+# INITIAL ADD-ONS
+
+RUN apk add git
+RUN npm install -g typescript@3.9.9
+
+# WORKING DIRECTORY
+
+WORKDIR /home/currency-reports

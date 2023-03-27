@@ -3,8 +3,6 @@ version: "3"
 services:
   my_envoy_proxy:
     container_name: my-envoy-proxy
-    build:
-      context: .
     command:
       - /bin/sh
       - -c
@@ -15,6 +13,11 @@ services:
         cp ./ssl/online/ca-and-crt.pem   /tmp/ca-and-crt.pem
         /usr/local/bin/envoy -c          /etc/envoy/envoy.yaml
     image: envoyproxy/envoy:v1.14.1
+    healthcheck:
+      test: pidof envoy || exit 1
+      interval: 2s
+      timeout: 3s
+      retries: 4
     ports:
       - "${MYVAR_ENVOY_SERVICEPORT_SECURE}:${MYVAR_ENVOY_SERVICEPORT_SECURE}"
       - "${MYVAR_ENVOY_SERVICEPORT_INSECURE}:${MYVAR_ENVOY_SERVICEPORT_INSECURE}"
@@ -36,6 +39,77 @@ services:
     volumes:
       - ./nginx/port80-proxy/conf.d:/etc/nginx/conf.d
 
+  node_gen_protos:
+    container_name: node-gen-protos
+    command:
+      - /bin/sh
+      - -c
+      - |
+        rm -fR   ./gen-protos
+        cp -R    ./gen-protos-copy   ./gen-protos
+        cd       ./gen-protos
+        npm ci
+        npm run   clean-protos
+        npm run   gen-protos-ts
+        npm run   gen-protos-js
+        npm run   copy-protos-to
+        tail -f   /dev/null
+    depends_on:
+      my_envoy_proxy:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+    healthcheck:
+      test: stat /home/currency-reports/proto-types/*.js || exit 1
+      interval: 2s
+      timeout: 3s
+      retries: 4
+    image: node:12.22.12-stretch
+    volumes:
+      - ./gen-protos:/home/currency-reports/gen-protos-copy
+      - ./protos:/home/currency-reports/protos
+      - ./proto-types:/home/currency-reports/proto-types
+    working_dir: /home/currency-reports
+
+  node_grpc_app:
+    container_name: node-grpc-app
+    build:
+      context: .
+      dockerfile: Dockerfile-node-grpc-app
+    command:
+      - /bin/sh
+      - -c
+      - |
+        rm -fR   ./grpc
+        cp -R    ./grpc-copy   ./grpc
+        cd       ./grpc
+        echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
+        npm set   unsafe-perm true
+        npm ci    --only=production
+        npm run   copy-protos-from
+        npm run   start
+    depends_on:
+      node_gen_protos:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+    healthcheck:
+      test: curl -f http://${MYVAR_GRPC_SERVICEDOMAIN}:${MYVAR_GRPC_SERVERPORT}
+      interval: 2s
+      timeout: 3s
+      retries: 4
+    network_mode: host
+    ports:
+      - "${MYVAR_GRPC_SERVERPORT}:${MYVAR_GRPC_SERVERPORT}"
+    volumes:
+      - ./.env:/home/currency-reports/.env
+      - ./grpc:/home/currency-reports/grpc-copy
+      - ./protos:/home/currency-reports/protos
+      - ./proto-types:/home/currency-reports/proto-types
+    working_dir: /home/currency-reports
+
   node_web_apps:
     container_name: node-web-apps
     build:
@@ -51,10 +125,8 @@ services:
         mkdir -p ./config
         cp       ./.env              ./config/vars
         .        ./setup/enable_protoc
-        rm -fR   ./grpc
         rm -fR   ./web-client
         rm -fR   ./web-server
-        cp -R    ./grpc-copy         ./grpc
         cp -R    ./web-client-copy   ./web-client
         cp -R    ./web-server-copy   ./web-server
         cd        /home/currency-reports/web-client
@@ -67,22 +139,17 @@ services:
         cd        /home/currency-reports/web-server
         echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
         npm ci    --only=production
-        cd        /home/currency-reports/grpc
-        echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
-        npm ci    --only=production
-        npm run   start > /dev/null &
-        cd        /home/currency-reports/web-server
-        npm run   start > /dev/null
-#        tail -f   /dev/null
+        npm run   start
     depends_on:
-      - my_envoy_proxy
-      - nginx_port80_proxy
+      node_grpc_app:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       TZ: UTC
     network_mode: host
+    ports:
+      - "${MYVAR_WEB_SERVERPORT}:${MYVAR_WEB_SERVERPORT}"
     volumes:
-      - ./grpc:/home/currency-reports/grpc-copy
       - ./protos:/home/currency-reports/protos
       - ./scripts:/home/currency-reports/scripts
       - ./setup:/home/currency-reports/setup
