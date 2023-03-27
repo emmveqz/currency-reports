@@ -129,15 +129,10 @@ const {
   HTTP2_HEADER_VARY,
 }						= http2Constants
 const GZIP_ABOVE_OF		= 8192 // bytes
-/*
-*/
-const HTTP2_PORT		= vars.MYVAR_WEB_SERVERPORT
 const DEFAULT_INDEX		= "index.html"
 const PUBLIC_DIR		= _path.resolve(__dirname,	"public")
 const SSL_DIR			= _path.resolve(__dirname,	"../ssl")
 
-/*
-*/
 const sslCreds			= !isSecureConn ? {} : {
   ca:		fs.readFileSync(`${SSL_DIR}/ca-root.crt`,		"utf8"),
   cert:	fs.readFileSync(`${SSL_DIR}/online/crt.pem`,	"utf8"),
@@ -172,11 +167,17 @@ export const DedicatedPaths = {
 
 const refreshCachePath = `/${DedicatedPaths.api}/refresh-cache`
 
+const runningHost = vars.MYVAR_WEB_SERVERDOMAIN
+  + ( vars.MYVAR_WEB_SERVERPORT == 80 || vars.MYVAR_WEB_SERVERPORT == 443
+    ? ""
+    : `:${vars.MYVAR_WEB_SERVERPORT}`
+  )
+
 const defaultOrigins = isSecureConn
   ? []
   : [
     `http://localhost`,
-    `http://127.0.0.1`,
+    `http://${runningHost}`,
   ]
 
 const http2Config: SecureServerOptions = {
@@ -184,7 +185,7 @@ const http2Config: SecureServerOptions = {
   allowHTTP1: true,
   origins: [
     ...defaultOrigins,
-    `https://${vars.MYVAR_WEB_SERVERDOMAIN}`,
+    `https://${runningHost}`,
   ],
 }
 
@@ -474,13 +475,14 @@ const pushFile = async (stream: ServerHttp2Stream, urlPath: string, fileName: st
 
 const http1Handler = (req: Http2ServerRequest, resp: Http2ServerResponse): void => {
   console.log("from", req.socket.remoteAddress)
+  console.log("to", req.headers[HTTP2_HEADER_HOST])
 
   if (parseInt(req.httpVersion, 10) === 2) {
     return
   }
 
   const isDomainAllowed = false
-    || req.headers[HTTP2_HEADER_HOST] === vars.MYVAR_WEB_SERVERDOMAIN
+    || req.headers[HTTP2_HEADER_HOST] === runningHost
   const etag = req.headers[HTTP2_HEADER_IF_NONE_MATCH] as string
   const stream = new Http1Writer(resp)
 
@@ -525,13 +527,14 @@ const getRequestFile = async (fileName: string, stream: IHttpWriter, etag?: stri
 
 const requestListener: RequestListener = (req, resp) => {
   console.log("from", req.socket.remoteAddress)
+  console.log("to", req.headers[HTTP2_HEADER_HOST])
 
   if (parseInt(req.httpVersion, 10) === 2) {
     return
   }
 
   const isDomainAllowed = false
-    || req.headers[HTTP2_HEADER_HOST] === vars.MYVAR_WEB_SERVERDOMAIN
+    || req.headers[HTTP2_HEADER_HOST] === runningHost
   const etag = req.headers[HTTP2_HEADER_IF_NONE_MATCH] as string
   const stream = new Http1Writer(resp)
 
@@ -620,13 +623,10 @@ const http2Handler = (url: string, stream: IHttpWriter, isDomainAllowed: boolean
 const server = isSecureConn
   ? createSecureServer(http2Config, http1Handler)
   : createServer(requestListener)
-/*
-createServer(requestListener)
-createSecureServer(http2Config, http1Handler)
-*/
+
 server
-  .listen(HTTP2_PORT, "0.0.0.0", () => {
-    console.log("HTTP2 server started on port", HTTP2_PORT)
+  .listen(vars.MYVAR_WEB_SERVERPORT, "0.0.0.0", () => {
+    console.log("HTTP2 server started on port", vars.MYVAR_WEB_SERVERPORT)
 
     refreshCache()
       .then((res) => {
@@ -639,8 +639,8 @@ if (isSecureConn) {
   server
   .on("stream", (stream: ServerHttp2Stream, headers: IncomingHttpHeaders): void => {
     const isDomainAllowed = false
-      || vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_HOST]
-      || vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_AUTHORITY]
+      || runningHost === headers[HTTP2_HEADER_HOST]
+      || runningHost === headers[HTTP2_HEADER_AUTHORITY]
 
     const url = headers[HTTP2_HEADER_PATH] as string
     const etag = headers[HTTP2_HEADER_IF_NONE_MATCH] as string
