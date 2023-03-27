@@ -38,35 +38,21 @@ export const RootStoreName = "globState"
 export const cacheDbName = "echonextCache"
 export const cacheRootStore = "baseEntities"
 export const cacheBuildVerStore = "buildVer"
+const indexedDb = new Worker("/workers/indexedDb.js") as unknown as IAppWorkers["indexedDb"]
+/*
 const { indexedDb } = ((globalThis as any).workers as IAppWorkers)
+*/
 
 let messageCount = 0
 const workerMessages: { [messageId: number]: (data: IMessageData) => void } = {}
 
 const newDbMessage = <Action extends keyof IActions, T = any>(action: Action, params: IActions<T>[Action]): Promise<IMessageData<Action, T>> => {
   console.log("newDbMessage | action:", action, " | params:", params)
-  /*
   const messageId = messageCount === Number.MAX_SAFE_INTEGER ? 0 : ++messageCount
-  */
-  messageCount++
-
-  if (messageCount === Number.MAX_SAFE_INTEGER) {
-    messageCount = 0
-  }
-
-  const messageId = messageCount
+  messageCount = messageId
 
   const request = new Promise<IMessageData<Action, T>>((resolv) => {
-    // tslint:disable: jsdoc-format
-    /**
-     * @ToDo Needs to be implemented.
     workerMessages[messageId] = resolv as (data: IMessageData) => void
-    */
-    resolv({
-      messageId,
-      result: {} as IResults<T>[Action],
-      err: new Error("Indexed DB is not implemented yet."),
-    })
   })
 
   indexedDb.postMessage({
@@ -81,7 +67,7 @@ const newDbMessage = <Action extends keyof IActions, T = any>(action: Action, pa
 indexedDb.onmessage = ({ data }: { data: IMessageData }) => {
   console.log("indexedDb.onmessage", data)
 
-  workerMessages[data.messageId](data)
+  workerMessages[data.messageId]?.(data)
   delete workerMessages[data.messageId]
 }
 

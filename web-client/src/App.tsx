@@ -1,8 +1,4 @@
 
-(globalThis as unknown as IAppGlobal).workers = {
-  indexedDb: new Worker("/workers/indexedDb.js") as unknown as IIndexedDbWorker,
-}
-
 ;
 (globalThis as unknown as IAppGlobal).consoleLogCss = {
   ComponentMount: "color: red; font-weight: bold; border: 1px solid red; background: #EE0; padding: 1px 8px;",

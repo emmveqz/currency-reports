@@ -131,6 +131,7 @@ services:
         npm set   unsafe-perm true
         npm ci    --only=production
         npm run   build
+        npm run   build-worker --worker=indexedDb
         npm run   deploy-to-webserver
         cd        /home/currency-reports/web-server
         echo      ${GITHUB_AUTH_TOKEN} >> ./.npmrc
