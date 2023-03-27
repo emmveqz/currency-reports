@@ -85,6 +85,10 @@ class Http1Writer extends Writable implements IHttpWriter {
 
 //
 
+const isSecureConn = !!parseInt(vars.MYVAR_WEB_SECURECONN_ENABLED as unknown as string, 10)
+
+console.log("isSecureConn", isSecureConn)
+
 const cachedFiles: ICachedFiles = {}
 const {
   HTTP2_HEADER_AUTHORITY,
@@ -103,7 +107,6 @@ const {
 }						= http2Constants
 const GZIP_ABOVE_OF		= 8192 // bytes
 /*
-const HTTP2_PORT		= 80
 */
 const HTTP2_PORT		= vars.MYVAR_WEB_SERVERPORT
 const DEFAULT_INDEX		= "index.html"
@@ -111,9 +114,8 @@ const PUBLIC_DIR		= _path.resolve(__dirname,	"public")
 const SSL_DIR			= _path.resolve(__dirname,	"../ssl")
 
 /*
-const sslCreds			= {} || {
 */
-const sslCreds			= {
+const sslCreds			= !isSecureConn ? {} : {
   ca:		fs.readFileSync(`${SSL_DIR}/ca-root.crt`,		"utf8"),
   cert:	fs.readFileSync(`${SSL_DIR}/online/crt.pem`,	"utf8"),
   key:	fs.readFileSync(`${SSL_DIR}/online/key.pem`,	"utf8"),
@@ -135,10 +137,10 @@ const pathsToCache		= [
   "workers",
 ]
 const indexPushedFolders: string[] = [
-  // "css",
+  "css",
   // "fonts", // too expensive
-  // "js",
-  // "workers",
+  "js",
+  "workers",
 ]
 
 export const DedicatedPaths = {
@@ -147,14 +149,18 @@ export const DedicatedPaths = {
 
 const refreshCachePath = `/${DedicatedPaths.api}/refresh-cache`
 
+const defaultOrigins = isSecureConn
+  ? []
+  : [
+    `http://localhost`,
+    `http://127.0.0.1`,
+  ]
+
 const http2Config: SecureServerOptions = {
   ...sslCreds,
   allowHTTP1: true,
   origins: [
-    /*
-    `http://localhost`,
-    `http://127.0.0.1`,
-    */
+    ...defaultOrigins,
     `https://${vars.MYVAR_WEB_SERVERDOMAIN}`,
   ],
 }
@@ -379,7 +385,7 @@ const streamFile = async (stream: IHttpWriter, fileName: string, requestFile?: I
 
   stream.respondWithFD(fdFd, headers)
   stream.end()
-  fd.close()
+  //fd.close()
 }
 
 const streamFile2 = (stream: IHttpWriter, cachedFile: ICachedFile): void => {
@@ -562,10 +568,14 @@ const http2Handler = (url: string, stream: IHttpWriter, isDomainAllowed: boolean
   })()
 }
 
+const server = isSecureConn
+  ? createSecureServer(http2Config, http1Handler)
+  : createServer(requestListener)
 /*
 createServer(requestListener)
-*/
 createSecureServer(http2Config, http1Handler)
+*/
+server
   .listen(HTTP2_PORT, "0.0.0.0", () => {
     console.log("HTTP2 server started on port", HTTP2_PORT)
 
