@@ -43,10 +43,18 @@ interface IRequestFile {
 
 interface IHttpWriter extends Writable {
   respond(headers?: OutgoingHttpHeaders): void
+  /**
+   * This will cause the Stream to end.
+   * @param fd
+   * @param headers
+   */
   respondWithFD(fd: number, headers?: OutgoingHttpHeaders): void
 }
 
 interface IHttpResponse extends Stream {
+  end(callback?: () => void): void
+  end(data: string | Uint8Array, callback?: () => void): void
+  end(data: string | Uint8Array, encoding: string, callback?: () => void): void
   setHeader(name: string, value: number | string | ReadonlyArray<string>): void
   write(chunk: any, encoding: string, callback?: (error: Error | null | undefined) => void): boolean
 }
@@ -59,6 +67,11 @@ class Http1Writer extends Writable implements IHttpWriter {
     resp.on("close", () => {
       this.emit("close")
     })
+
+    this.on("finish", () => {
+      console.log("Http1Writer.finish")
+      this.resp.end()
+    })
   }
 
   public _write(chunk: any, encoding: string, callback: (error?: Error | null | undefined) => void): void {
@@ -69,21 +82,31 @@ class Http1Writer extends Writable implements IHttpWriter {
     if (!headers) {
       return
     }
+    console.log("respond.etag", headers[http2Constants.HTTP2_HEADER_ETAG])
     Object.entries(headers).forEach(([hdr, val]) => {
       this.resp.setHeader( hdr.startsWith(":") ? hdr.substr(1) : hdr, !val ? "" : String(val) )
     })
   }
 
   public respondWithFD(fd: number, headers?: OutgoingHttpHeaders): void {
+    console.log("respondWithFD fd etag", fd, headers?.[http2Constants.HTTP2_HEADER_ETAG])
     this.respond(headers)
 
-    fs.createReadStream(null as unknown as string, { fd })
+    fs.createReadStream(null as unknown as string, { autoClose: false, fd, start: 0 })
       .pipe(this, { end: true })
+      .on("end", () => {
+        console.log("fs.createReadStream.end fd", fd)
+      })
+      .on("finish", () => {
+        console.log("fs.createReadStream.finish fd", fd)
+      })
   }
 
 }
 
 //
+
+const chacheable: boolean = true
 
 const isSecureConn = !!parseInt(vars.MYVAR_WEB_SECURECONN_ENABLED as unknown as string, 10)
 
@@ -175,6 +198,23 @@ const gzipData = (data: Buffer): Promise<Buffer|Error> => {
   })
 }
 
+const closeFd = async (fd: fs.promises.FileHandle, onEvent: string) => {
+  const fdFd = fd.fd
+  console.log(onEvent, "closing fd:", fdFd)
+
+  if (fdFd < 0) {
+    return
+  }
+
+  try {
+    await fd.close()
+    console.log(onEvent, "closed fd:", fdFd)
+  }
+  catch (ex) {
+    console.log(`${onEvent} fd ${fdFd}:`, (ex as Error).message)
+  }
+}
+
 const opendFd = async (fileName: string, stream: Writable): Promise<fs.promises.FileHandle|Error> => {
   let fd: fs.promises.FileHandle
 
@@ -190,14 +230,13 @@ const opendFd = async (fileName: string, stream: Writable): Promise<fs.promises.
   const fdFd = fd.fd
   console.log("opened fd:", fdFd)
 
-  stream.on("close", (): void => {
-    console.log("closing fd:", fdFd)
-
-    fd.close()
-      .catch((e) => {
-        console.log(e.message || `error closing fd ${fdFd}`)
-      })
-  })
+  stream
+    .on("close", (): void => {
+      closeFd(fd, "sream.closed")
+    })
+    .on("finish", () => {
+      closeFd(fd, "sream.finished")
+    })
 
   return fd
 }
@@ -347,6 +386,7 @@ const streamFile = async (stream: IHttpWriter, fileName: string, requestFile?: I
   const stats	= !requestFile ? (await getStatByFd(fd)) : requestFile.stats
 
   if (stats instanceof Error) {
+    fd.close()
     return stats
   }
 
@@ -361,13 +401,16 @@ const streamFile = async (stream: IHttpWriter, fileName: string, requestFile?: I
     catch (e) {
       const error = e.message || `error reading fd ${fdFd}`
       console.log("error:", error)
+      fd.close()
       return new Error(error)
     }
 
+    console.log('compressing file', fileName)
     const gzippedData = await gzipData(fileData)
 
     if (gzippedData instanceof Error) {
       console.log("error:", gzippedData.message)
+      fd.close()
       return gzippedData
     }
     gzipped		= true
@@ -377,6 +420,8 @@ const streamFile = async (stream: IHttpWriter, fileName: string, requestFile?: I
 
   const headers = getHeaders(contLength, mime.getType(fileName) || "application/octet-stream", String(stats.mtimeMs), gzipped)
 
+  console.log('streamed file', fileName)
+
   if (gzipped) {
     stream.respond(headers)
     stream.end(fileData)
@@ -384,11 +429,10 @@ const streamFile = async (stream: IHttpWriter, fileName: string, requestFile?: I
   }
 
   stream.respondWithFD(fdFd, headers)
-  stream.end()
-  //fd.close()
 }
 
-const streamFile2 = (stream: IHttpWriter, cachedFile: ICachedFile): void => {
+const streamCachedFile = (stream: IHttpWriter, cachedFile: ICachedFile): void => {
+  console.log("streamCachedFile.etag", cachedFile.etag)
   const headers = getHeaders(cachedFile.data.byteLength, cachedFile.mime, cachedFile.etag, cachedFile.gzipped)
   stream.respond(headers)
   stream.end(cachedFile.data)
@@ -415,7 +459,7 @@ const pushFile = async (stream: ServerHttp2Stream, urlPath: string, fileName: st
       return
     }
     if (fileName in cachedFiles) {
-      streamFile2(pushStream, cachedFiles[fileName])
+      streamCachedFile(pushStream, cachedFiles[fileName])
       resolve()
       return
     }
@@ -495,6 +539,10 @@ const requestListener: RequestListener = (req, resp) => {
 }
 
 const refreshCache = async (): Promise<void|Error> => {
+  if (!chacheable) {
+    return
+  }
+
   for (const path of pathsToCache) {
     const result = await cacheFiles( _path.resolve(PUBLIC_DIR, path) )
 
@@ -541,12 +589,6 @@ const http2Handler = (url: string, stream: IHttpWriter, isDomainAllowed: boolean
   const fileName		= _path.resolve( PUBLIC_DIR, (sendIndex ? DEFAULT_INDEX : url2) );
 
   (async () => {
-    const requestFile = await getRequestFile(fileName, stream, etag)
-
-    if (!requestFile) {
-      return
-    }
-
     if (sendIndex && h2) {
       for (const dir of indexPushedFolders) {
         const gentor = getAllFiles( _path.resolve(PUBLIC_DIR, dir) )
@@ -561,9 +603,16 @@ const http2Handler = (url: string, stream: IHttpWriter, isDomainAllowed: boolean
     }
 
     if (fileName in cachedFiles) {
-      streamFile2(stream, cachedFiles[fileName])
+      streamCachedFile(stream, cachedFiles[fileName])
       return
     }
+
+    const requestFile = await getRequestFile(fileName, stream, etag)
+
+    if (!requestFile) {
+      return
+    } //
+
     streamFile(stream, fileName, requestFile)
   })()
 }
@@ -585,6 +634,9 @@ server
         console.log("refreshCache result: ", res)
       })
   })
+
+if (isSecureConn) {
+  server
   .on("stream", (stream: ServerHttp2Stream, headers: IncomingHttpHeaders): void => {
     const isDomainAllowed = false
       || vars.MYVAR_WEB_SERVERDOMAIN === headers[HTTP2_HEADER_HOST]
@@ -594,3 +646,4 @@ server
     const etag = headers[HTTP2_HEADER_IF_NONE_MATCH] as string
     http2Handler(url, stream, isDomainAllowed, etag, true)
   })
+}
