@@ -1,9 +1,7 @@
 
-import * as grpc              from "grpc"
+import * as grpc              from "@grpc/grpc-js"
 import config                 from "./config/my-config-vars"
-import {
-  CurrencyServiceService,
-}                             from "./proto-types/crypto-coins_grpc_pb"
+import * as Services          from "./proto-types/crypto-coins_grpc_pb"
 import CurrencyService        from "./services/CurrencyService"
 
 export * from "./services"
@@ -15,7 +13,7 @@ const serverCredentials = grpc.ServerCredentials.createInsecure()
 const grpcServer        = new grpc.Server()
 const currencyService   = new CurrencyService()
 
-grpcServer.addService(CurrencyServiceService, currencyService)
+grpcServer.addService((Services as any)["currencyPkg.CurrencyService"], currencyService as any)
 
 //
 

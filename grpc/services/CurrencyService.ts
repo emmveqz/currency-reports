@@ -30,7 +30,7 @@ import {
   sendUnaryData,
   ServerUnaryCall,
   ServerWritableStream,
-}                                 from "grpc"
+}                                 from "@grpc/grpc-js"
 import config                     from "../config/my-config-vars"
 import {
   BooleanResponse,
@@ -55,11 +55,19 @@ import {
   RecordUserAction,
 }                                 from "./common"
 
+type IDeclaredKeys<T> = {
+  [K in keyof T]: string extends K ? never : (number extends K ? never : K)
+} extends { [_ in keyof T]: infer U } ? U : never
+
+type ICurrencyServiceMethods = IDeclaredKeys<ICurrencyServiceServer>
+
+type ICurrencyService = Pick<ICurrencyServiceServer, ICurrencyServiceMethods>
+
 type INewableDao<IDb extends IMyDb, IDao extends IBaseDao> = { new(db: IDb): IDao }
 
 //
 
-export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implements ICurrencyServiceServer {
+export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implements ICurrencyService {
 
   public static TIMES_TO_REMIND = 3
 
@@ -77,7 +85,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
     this.DaoFactory = BaseDao as INewableDao<IDb, IBaseDao> as INewableDao<IDb, IDao>
   }
 
-  public realTimeRate(call: ServerWritableStream<RealTimeRateRequest>): void {
+  public realTimeRate(call: ServerWritableStream<RealTimeRateRequest, FloatResponse>): void {
     const currency		= getCurrencyEnum( call.request.getCurrency() )
     const rateTicker	= new CryptoCoinsRateTicker(BinanceUs)
     const ticker		= rateTicker.Tick(currency)
@@ -108,7 +116,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
   /**
    * @ToDo Change this procedure to a stream, since it might return a big payload.
    */
-  public historyData(call: ServerUnaryCall<HistoryDataRequest>, callback: sendUnaryData<HistoryDataResponse>): void {
+  public historyData(call: ServerUnaryCall<HistoryDataRequest, HistoryDataResponse>, callback: sendUnaryData<HistoryDataResponse>): void {
     const dao		= new this.DaoFactory(this.db)
     const currency	= getCurrencyEnum( call.request.getCurrency() )
     const range		= call.request.getHistoryrange() as number as HistoryRangeEnum
@@ -146,7 +154,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
     })()
   }
 
-  public currencySupported(call: ServerUnaryCall<CurrencySupportedRequest>, callback: sendUnaryData<BooleanResponse>): void {
+  public currencySupported(call: ServerUnaryCall<CurrencySupportedRequest, BooleanResponse>, callback: sendUnaryData<BooleanResponse>): void {
     const result	= currencySupported( call.request.getCurrency() )
     const response	= new BooleanResponse()
 
@@ -164,7 +172,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
     callback( null, response, copyMetadata(call.metadata) )
   }
 
-  public suscribeAlert(call: ServerUnaryCall<SuscribeAlertRequest>, callback: sendUnaryData<StatusResponse>): void {
+  public suscribeAlert(call: ServerUnaryCall<SuscribeAlertRequest, StatusResponse>, callback: sendUnaryData<StatusResponse>): void {
     console.log("suscribeAlert")
 
     RecordUserAction(
@@ -258,7 +266,7 @@ export class CurrencyService<IDb extends IMyDb, IDao extends IBaseDao> implement
     })()
   }
 
-  public markAlertAsSeen(call: ServerUnaryCall<MarkAlertAsSeenRequest>, callback: sendUnaryData<StatusResponse>): void {
+  public markAlertAsSeen(call: ServerUnaryCall<MarkAlertAsSeenRequest, StatusResponse>, callback: sendUnaryData<StatusResponse>): void {
     const dao = new this.DaoFactory(this.db)
     const {
       alertid,
