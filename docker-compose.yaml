@@ -96,7 +96,7 @@ services:
       NODE_ENV: production
       TZ: UTC
     healthcheck:
-      test: curl -f http://${MYVAR_GRPC_SERVICEDOMAIN}:${MYVAR_GRPC_SERVERPORT}
+      test: printf "GET / HTTP/1.0\r\n\r\n" | nc -v ${MYVAR_GRPC_SERVICEDOMAIN} ${MYVAR_GRPC_SERVERPORT}
       interval: 2s
       timeout: 3s
       retries: 4

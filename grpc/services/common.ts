@@ -6,7 +6,7 @@ import { IpV4 }           from "@emmveqz/currency-reports-tools/dist/Validator"
 import {
   credentials as grpcCredentials,
   Metadata,
-}                         from "grpc"
+}                         from "@grpc/grpc-js"
 
 //
 
