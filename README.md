@@ -6,13 +6,8 @@ the price changes you set. (and more)
 
 ### Pre-requisites
 
- - Since the API is based in [gRPC](https://github.com/grpc/grpc)
-   which uses HTTP2,  
-   which at the same time requires a secure connection,  
-   we're gonna need a server with its own (sub)domain and its SSL cert.  
-   (You could use [certbot](https://certbot.eff.org/))
  - Clone and run
-   [Currency Reports (daemons)](https://github.com/emmveqz/currency-reports)
+   [Currency Reports (daemons)](https://github.com/emmveqz/currency-reports-daemons)
  - Have `docker` and `docker-compose` installed.  
    (preferably docker-compose >= 2 otherwise you might get errors
    with the .yaml)
@@ -21,7 +16,18 @@ the price changes you set. (and more)
    (You can do that [here](https://github.com/settings/tokens))
 
 
-### Instructions
+### Instructions (local instance)
+
+ - Set your environment variables in [.env](./.env)  
+   Must set your github access token in:  
+   `GITHUB_AUTH_TOKEN`  
+   in order to be able to install npm packages from the `@emmveqz` scope.
+ - Build and run the app with:  
+   `docker-compose up -d`  
+   (or without the `-d` option to keep watching the logs)
+
+
+### Instructions (server instance with SSL)
 
  - Set your environment variables in [.env](./.env)  
    Must set your github access token in:  
